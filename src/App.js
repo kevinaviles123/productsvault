@@ -17,6 +17,7 @@ function App() {
     addProduct,
     updateProduct,
     deleteProduct,
+    refetch: fetchProducts,
   } = useProducts();
 
   const { toasts, showToast, removeToast } = useToast();
@@ -66,12 +67,52 @@ function App() {
   };
 
   const handleDelete = async (id) => {
+    console.log('🔍 handleDelete llamado con ID:', id, 'Tipo:', typeof id);
+    
     try {
+      // Mostrar toast de carga mientras se procesa la eliminación
+      const loadingToast = showToast('Eliminando producto...', 'loading', 0);
+      
       await deleteProduct(id);
-      showToast('Producto eliminado', 'success');
+      
+      // Remover toast de carga y mostrar éxito
+      removeToast(loadingToast);
+      showToast('Producto eliminado permanentemente', 'success');
+      
     } catch (err) {
-      console.error('Error al eliminar:', err);
-      showToast('Error al eliminar producto', 'error');
+      console.error('❌ Error en handleDelete:', {
+        message: err.message,
+        id: id,
+        idType: typeof id,
+        stack: err.stack,
+        serverError: err.serverResponse,
+        statusCode: err.statusCode
+      });
+      
+      // Mensajes de error más específicos para el usuario
+      let userMessage = 'Error al eliminar producto';
+      
+      if (err.statusCode === 404) {
+        userMessage = 'Producto no encontrado. Puede que ya haya sido eliminado.';
+      } else if (err.statusCode === 500) {
+        userMessage = 'Error del servidor. Intente nuevamente en unos momentos.';
+      } else if (err.message.includes('network') || err.name === 'AbortError') {
+        userMessage = 'Error de conexión. Verifique su conexión a internet.';
+      } else if (err.message.includes('ID inválido')) {
+        userMessage = 'Error: ID de producto inválido.';
+      }
+      
+      showToast(userMessage, 'error');
+      
+      // Resincronizar con el servidor en caso de error
+      try {
+        console.log('🔄 Resincronizando estado después de error...');
+        await fetchProducts();
+        console.log('✅ Estado resincronizado exitosamente');
+      } catch (refetchError) {
+        console.error('❌ Error al resincronizar estado:', refetchError);
+        showToast('No se pudo actualizar la lista de productos', 'warning');
+      }
     }
   };
 
@@ -161,15 +202,20 @@ function App() {
                 onAddClick={() => handleOpenModal()}
               />
             ) : (
-              filteredProducts.map((product, index) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onEdit={() => handleOpenModal(product)}
-                  onDelete={() => handleDelete(product.id)}
-                  index={index}
-                />
-              ))
+              filteredProducts.map((product, index) => {
+                // Asegurar que siempre haya una key única
+                const uniqueKey = product.id ? product.id : `product-${index}-${Date.now()}`;
+                return (
+                  <ProductCard
+                    key={uniqueKey}
+                    product={product}
+                    onEdit={() => handleOpenModal(product)}
+                    onDelete={() => handleDelete(product.id)}
+                    index={index}
+                    showToast={showToast}
+                  />
+                );
+              })
             )}
           </div>
         )}

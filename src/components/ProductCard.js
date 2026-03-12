@@ -17,19 +17,34 @@ const STATUS = {
   },
 };
 
-const ProductCard = ({ product, onEdit, onDelete, index }) => {
-  const stockNum  = parseInt(product.stock) || 0;
+const ProductCard = ({ product, onEdit, onDelete, index, showToast }) => {
+  // Validar y proporcionar valores por defecto para props
+  const safeProduct = product || {};
+  const safeOnEdit = onEdit || (() => {});
+  const safeOnDelete = onDelete || (() => {});
+  const safeShowToast = showToast || (() => {});
+  
+  const stockNum  = parseInt(safeProduct.stock) || 0;
   const statusKey = stockNum === 0 ? 'agotado' : stockNum <= 5 ? 'bajo' : 'activo';
-  const status    = STATUS[statusKey];
+  const status    = STATUS[statusKey] || STATUS.activo;
 
   const handleDelete = async () => { 
+    console.log('🔄 ProductCard.handleDelete - safeProduct.id:', safeProduct.id, 'Tipo:', typeof safeProduct.id);
+    
+    // Validar que tenemos un ID antes de proceder
+    if (!safeProduct.id && safeProduct.id !== 0) {
+      console.error('❌ Error: Producto sin ID - no se puede eliminar', safeProduct);
+      safeShowToast('Error: Producto no tiene ID válido', 'error');
+      return;
+    }
+    
     const result = await MySwal.fire({ 
       title: '¿Eliminar producto?', 
       html: ` 
         <span style="color:rgba(255,255,255,0.4); 
                      font-size:0.78rem; 
                      line-height:1.6"> 
-          <b style="color:#fff">${product.name}</b> 
+          <b style="color:#fff">${safeProduct.name || 'Producto sin nombre'}</b> 
           será eliminado permanentemente. 
         </span> 
       `, 
@@ -43,22 +58,47 @@ const ProductCard = ({ product, onEdit, onDelete, index }) => {
     }); 
   
     if (result.isConfirmed) { 
-      onDelete(product.id); 
-  
-      MySwal.fire({ 
-        title: '¡Eliminado!', 
-        html: ` 
-          <span style="color:rgba(255,255,255,0.4); 
-                       font-size:0.78rem"> 
-            El producto fue eliminado correctamente. 
-          </span> 
-        `, 
-        icon: 'success', 
-        iconColor: '#c8ff00', 
-        timer: 1500, 
-        showConfirmButton: false, 
-      }); 
-    } 
+      console.log('✅ Usuario confirmó eliminación - Enviando ID:', safeProduct.id);
+      
+      try {
+        // Llamar a la función de eliminación y esperar a que complete
+        await safeOnDelete(safeProduct.id);
+        
+        // Solo mostrar éxito si la eliminación se completó sin errores
+        MySwal.fire({ 
+          title: '¡Eliminado!', 
+          html: ` 
+            <span style="color:rgba(255,255,255,0.4); 
+                     font-size:0.78rem"> 
+              El producto fue eliminado permanentemente. 
+            </span> 
+          `, 
+          icon: 'success', 
+          iconColor: '#c8ff00', 
+          timer: 1500, 
+          showConfirmButton: false, 
+        }); 
+      } catch (error) {
+        console.error('❌ Error durante la eliminación:', error);
+        
+        // Mostrar error específico si la eliminación falla
+        MySwal.fire({ 
+          title: 'Error', 
+          html: ` 
+            <span style="color:rgba(255,255,255,0.4); 
+                     font-size:0.78rem"> 
+              No se pudo eliminar el producto. 
+            </span> 
+          `, 
+          icon: 'error', 
+          iconColor: '#ef4444', 
+          timer: 2000, 
+          showConfirmButton: false, 
+        });
+      }
+    } else {
+      console.log('❌ Usuario canceló la eliminación');
+    }
   }; 
 
   return (
@@ -75,10 +115,10 @@ const ProductCard = ({ product, onEdit, onDelete, index }) => {
                       border-b border-white/[0.05] flex-shrink-0">
         
         {/* Imagen real */}
-        {product.image && (
+        {safeProduct.image && (
           <img
-            src={product.image}
-            alt={product.name}
+            src={safeProduct.image}
+            alt={safeProduct.name || 'Producto'}
             className="w-full h-full object-cover object-center 
                        transition-transform duration-500 
                        group-hover:scale-105"
@@ -86,7 +126,7 @@ const ProductCard = ({ product, onEdit, onDelete, index }) => {
         )}
 
         {/* Placeholder cuando no hay imagen */}
-        {!product.image && (
+        {!safeProduct.image && (
           <div className="w-full h-full flex flex-col items-center 
                           justify-center gap-2">
             <Box size={36} className="text-white/[0.06]" />
@@ -98,7 +138,7 @@ const ProductCard = ({ product, onEdit, onDelete, index }) => {
         )}
 
         {/* Gradiente sutil sobre imagen para legibilidad */}
-        {product.image && (
+        {safeProduct.image && (
           <div className="absolute inset-0 
                           bg-gradient-to-t from-[#0f0f1a]/60 
                           via-transparent to-transparent" />
@@ -120,11 +160,11 @@ const ProductCard = ({ product, onEdit, onDelete, index }) => {
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-[0.58rem] text-[#c8ff00] tracking-[0.15em] 
                            uppercase font-mono font-semibold">
-            {product.category || '—'}
+            {safeProduct.category || '—'}
           </span>
-          {product.sku && (
+          {safeProduct.sku && (
             <span className="text-[0.58rem] text-white/20 font-mono">
-              {product.sku}
+              {safeProduct.sku}
             </span>
           )}
         </div>
@@ -132,14 +172,14 @@ const ProductCard = ({ product, onEdit, onDelete, index }) => {
         {/* Nombre — line-clamp-1 */}
         <h3 className="font-display font-bold text-[0.85rem] sm:text-[0.9rem] text-white 
                        leading-tight mb-2 line-clamp-1">
-          {product.name}
+          {safeProduct.name || 'Producto sin nombre'}
         </h3>
 
         {/* Descripción — máximo 2 líneas */}
-        {product.description && (
+        {safeProduct.description && (
           <p className="text-[0.7rem] text-white/30 leading-relaxed 
                         mb-3 line-clamp-2">
-            {product.description}
+            {safeProduct.description}
           </p>
         )}
 
@@ -157,18 +197,18 @@ const ProductCard = ({ product, onEdit, onDelete, index }) => {
           <p className="font-display font-bold text-[#c8ff00] leading-none 
                         truncate max-w-[130px]" 
              style={{ fontSize: 'clamp(0.8rem, 3vw, 1.05rem)' }}>
-            ${parseFloat(product.price || 0).toLocaleString('es-CO', { 
+            ${parseFloat(safeProduct.price || 0).toLocaleString('es-CO', { 
               maximumFractionDigits: 0 
             })}
           </p>
         </div>
 
         {/* Fecha — más sutil */}
-        {product.createdAt && (
+        {safeProduct.createdAt && (
           <div className="flex items-center gap-1 text-white/15 mb-3">
             <Calendar size={10} />
             <span className="text-[0.6rem] font-mono">
-              {new Date(product.createdAt).toLocaleDateString('es-CO')}
+              {new Date(safeProduct.createdAt).toLocaleDateString('es-CO')}
             </span>
           </div>
         )}
@@ -178,7 +218,7 @@ const ProductCard = ({ product, onEdit, onDelete, index }) => {
 
           {/* Editar */}
           <button
-            onClick={onEdit}
+            onClick={safeOnEdit}
             className="flex-1 flex items-center justify-center gap-1.5 
                        py-2 sm:py-2.5 rounded-xl text-[0.72rem] sm:text-xs font-mono 
                        text-white/40 bg-white/[0.04] 
