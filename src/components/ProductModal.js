@@ -126,15 +126,13 @@ const ProductModal = ({ isOpen, onClose, onSubmit, initialData, showToast }) => 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
       <div
-        className="modal-box max-w-2xl"
+        className="bg-[#0f0f1a] border border-white/[0.08] w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[92vh] sm:max-h-[88vh] overflow-hidden shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#0f0f1a]
-                        border-b border-white/[0.06]
-                        px-6 py-4 flex items-center justify-between">
+        {/* Header sticky top */}
+        <div className="sticky top-0 z-10 bg-[#0f0f1a] flex-shrink-0 border-b border-white/[0.06] px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#c8ff00]/10 flex items-center justify-center">
               <Package size={20} className="text-[#c8ff00]" />
@@ -144,31 +142,27 @@ const ProductModal = ({ isOpen, onClose, onSubmit, initialData, showToast }) => 
                 {initialData ? 'Editar Producto' : 'Nuevo Producto'}
               </h3>
               <p className="text-[0.7rem] text-white/30 font-mono mt-1.5 uppercase tracking-widest">
-                {initialData ? `ID: ${initialData.id}` : 'Registrar nuevo artículo en catálogo'}
+                {initialData ? `ID: ${initialData.id}` : 'Registrar nuevo artículo'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-white/30 hover:text-white/80
-                       transition-all p-2 rounded-xl
-                       hover:bg-white/[0.05]"
+            className="text-white/30 hover:text-white/80 transition-all p-2 rounded-xl hover:bg-white/[0.05]"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-8">
-          
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+        {/* Form con scroll interno */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6 overscroll-contain -webkit-overflow-scrolling-touch">
             
-            {/* Columna Izquierda: Imagen */}
-            <div className="md:col-span-2 space-y-4">
-              <label className="label">Imagen del Producto</label>
+            {/* Imagen */}
+            <div className="space-y-3">
+              <label className="label text-white/40 text-xs font-mono uppercase tracking-wider">Imagen del Producto</label>
               <div 
-                className={`relative aspect-square rounded-2xl border-2 border-dashed 
-                           transition-all duration-300 flex flex-col items-center justify-center overflow-hidden
+                className={`relative aspect-video sm:aspect-square rounded-2xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center overflow-hidden
                            ${preview ? 'border-transparent bg-surface2' : 'border-white/10 bg-white/[0.02] hover:border-[#c8ff00]/30'}`}
               >
                 {preview ? (
@@ -209,17 +203,13 @@ const ProductModal = ({ isOpen, onClose, onSubmit, initialData, showToast }) => 
                 accept="image/*"
                 className="hidden"
               />
-              <p className="text-[0.6rem] text-white/20 font-mono text-center">
-                JPG, PNG o WEBP. Máx 2MB.
-              </p>
             </div>
 
-            {/* Columna Derecha: Datos */}
-            <div className="md:col-span-3 space-y-5">
-              
+            {/* Datos */}
+            <div className="space-y-5">
               {/* Nombre */}
               <div className="space-y-1.5">
-                <label className="label flex items-center gap-1.5"><Tag size={11} /> Nombre *</label>
+                <label className="label flex items-center gap-1.5 text-white/40 text-xs"><Tag size={11} /> Nombre *</label>
                 <input
                   type="text"
                   name="name"
@@ -227,7 +217,7 @@ const ProductModal = ({ isOpen, onClose, onSubmit, initialData, showToast }) => 
                   onChange={handle}
                   onBlur={handleBlur}
                   required
-                  className={`field ${errors.name && touched.name ? 'border-red-500/50' : ''}`}
+                  className={`field w-full bg-white/[0.03] border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/10 focus:border-[#c8ff00]/50 transition-all ${errors.name && touched.name ? 'border-red-500/50' : ''}`}
                   placeholder="Ej: Sudadera Oversize"
                 />
                 {errors.name && touched.name && (
@@ -240,7 +230,7 @@ const ProductModal = ({ isOpen, onClose, onSubmit, initialData, showToast }) => 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Precio */}
                 <div className="space-y-1.5">
-                  <label className="label flex items-center gap-1.5"><DollarSign size={11} /> Precio *</label>
+                  <label className="label flex items-center gap-1.5 text-white/40 text-xs"><DollarSign size={11} /> Precio *</label>
                   <input
                     type="number"
                     name="price"
@@ -249,7 +239,7 @@ const ProductModal = ({ isOpen, onClose, onSubmit, initialData, showToast }) => 
                     onBlur={handleBlur}
                     required
                     step="0.01"
-                    className={`field ${errors.price && touched.price ? 'border-red-500/50' : ''}`}
+                    className={`field w-full bg-white/[0.03] border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/10 focus:border-[#c8ff00]/50 transition-all ${errors.price && touched.price ? 'border-red-500/50' : ''}`}
                     placeholder="0.00"
                   />
                   {errors.price && touched.price && (
@@ -261,14 +251,14 @@ const ProductModal = ({ isOpen, onClose, onSubmit, initialData, showToast }) => 
 
                 {/* Categoría */}
                 <div className="space-y-1.5">
-                  <label className="label flex items-center gap-1.5"><Hash size={11} /> Categoría *</label>
+                  <label className="label flex items-center gap-1.5 text-white/40 text-xs"><Hash size={11} /> Categoría *</label>
                   <select
                     name="category"
                     value={form.category}
                     onChange={handle}
                     onBlur={handleBlur}
                     required
-                    className={`field appearance-none ${errors.category && touched.category ? 'border-red-500/50' : ''}`}
+                    className={`field w-full bg-white/[0.03] border-white/10 rounded-xl px-4 py-3 text-white focus:border-[#c8ff00]/50 transition-all appearance-none ${errors.category && touched.category ? 'border-red-500/50' : ''}`}
                   >
                     <option value="" disabled>Seleccionar...</option>
                     {CATEGORIES.map(cat => (
@@ -280,22 +270,21 @@ const ProductModal = ({ isOpen, onClose, onSubmit, initialData, showToast }) => 
 
               {/* Descripción */}
               <div className="space-y-1.5">
-                <label className="label flex items-center gap-1.5"><FileText size={11} /> Descripción</label>
+                <label className="label flex items-center gap-1.5 text-white/40 text-xs"><FileText size={11} /> Descripción</label>
                 <textarea
                   name="description"
                   value={form.description}
                   onChange={handle}
-                  rows={4}
-                  className="field resize-none"
+                  rows={3}
+                  className="field w-full bg-white/[0.03] border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/10 focus:border-[#c8ff00]/50 transition-all resize-none"
                   placeholder="Detalles del producto..."
                 />
               </div>
-
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="flex justify-end gap-3 pt-6 border-t border-white/[0.05]">
+          {/* Botones siempre visibles (Sticky Footer) */}
+          <div className="sticky bottom-0 z-10 bg-[#0f0f1a] flex-shrink-0 border-t border-white/[0.06] px-5 py-4 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
@@ -311,7 +300,6 @@ const ProductModal = ({ isOpen, onClose, onSubmit, initialData, showToast }) => 
               {initialData ? 'Actualizar' : 'Guardar'}
             </button>
           </div>
-
         </form>
       </div>
     </div>
