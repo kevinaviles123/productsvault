@@ -110,8 +110,7 @@ const ProductModal = ({ isOpen, onClose, onSubmit, initialData, showToast }) => 
 
       {/* Mobile — pantalla completa sin overlay oscuro */}
       <div
-        className="fixed inset-0 z-[100] sm:hidden
-                   bg-[#0f0f1a] flex flex-col"
+        className="modal-mobile sm:hidden z-[100]"
       >
         <ModalContent
           initialData={initialData}
@@ -167,8 +166,7 @@ const ModalContent = ({
     <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
 
       {/* Área scrollable */}
-      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5"
-           style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="modal-scroll-area px-5 py-5 space-y-5">
 
         {/* Imagen */}
         <div className="flex items-center gap-4">
@@ -281,8 +279,7 @@ const ModalContent = ({
       </div>
 
       {/* Footer siempre visible */}
-      <div className="flex-shrink-0 border-t border-white/[0.06]
-                      bg-[#0f0f1a] px-5 py-4
+      <div className="modal-footer px-5
                       flex items-center justify-end gap-3">
         <button type="button" onClick={onClose}
                 className="px-5 py-2.5 rounded-xl text-[0.7rem] font-mono
